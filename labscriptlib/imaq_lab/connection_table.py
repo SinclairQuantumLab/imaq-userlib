@@ -7,7 +7,7 @@ from labscript_devices.NI_DAQmx.models.NI_PXIe_6361 import NI_PXIe_6361
 from labscript_devices.NI_DAQmx.models.NI_PXIe_2790 import NI_PXIe_2790
 from user_devices.NICounter.labscript_devices import NICounter
 from user_devices.HamamatsuCamera.labscript_devices import HamamatsuCamera
-from user_devices.CustomSpinnakerCamera.labscript_devices import CustomSpinnakerCamera
+from labscript_devices.SpinnakerCamera.labscript_devices import SpinnakerCamera
 
 
 # from user_devices.PicoScope2405A.labscript_devices import PicoScope2405A
@@ -139,7 +139,7 @@ def ConnectionTable():
         'ImageFormatControl::OffsetY': 612,
     }
 
-    CustomSpinnakerCamera(
+    SpinnakerCamera(
         name="imaq_cam1",
         parent_device=pulseblaster_0.direct_outputs,
         connection='flag 8',
@@ -148,7 +148,7 @@ def ConnectionTable():
         camera_attributes={**spinnaker_camera_attributes_cam1},
     )    
 
-    CustomSpinnakerCamera(
+    SpinnakerCamera(
         name="imaq_cam2",
         parent_device=pulseblaster_0.direct_outputs,
         connection='flag 9',

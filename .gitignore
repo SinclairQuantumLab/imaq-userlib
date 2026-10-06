@@ -1,0 +1,22 @@
+# user_devices is maintained as its own Git repository
+user_devices/
+
+# Analysis routines are maintained separately on ANALYSIS
+analysislib/imaq_lab/
+
+# Python generated files
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor / Windows
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Generated HDF5
+*.h5

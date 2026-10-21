@@ -5,8 +5,18 @@ ConnectionTable()
 
 start()
 
-# Trigger both Spinnaker cameras simultaneously at t = 0.5 s
-t = 0.5
+t = 0.0
+
+# turn off MOT & repumper powers at t=0.
+mot_repumper_analog.constant(t, 0)
+mot_laser_analog.constant(t, 0)
+
+t += 1
+
+mot_repumper_analog.constant(t, repump_amp_setpoint)
+mot_laser_analog.constant(t,mot_amp_setpoint)
+
+t += image_wait_time
 
 imaq_cam1.expose(
     t=t,
@@ -22,5 +32,7 @@ imaq_cam2.expose(
     trigger_duration=50e-3,
 )
 
+
+t += 0.5
 # Leave enough time for the acquisitions to complete
-stop(1.0)
+stop(t)

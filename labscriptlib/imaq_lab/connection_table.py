@@ -8,9 +8,8 @@ from labscript_devices.NI_DAQmx.models.NI_PXIe_2790 import NI_PXIe_2790
 from user_devices.NICounter.labscript_devices import NICounter
 from user_devices.HamamatsuCamera.labscript_devices import HamamatsuCamera
 from labscript_devices.SpinnakerCamera.labscript_devices import SpinnakerCamera
-
-
-# from user_devices.PicoScope2405A.labscript_devices import PicoScope2405A
+from user_devices.GH3910.labscript_devices import GH3910
+from user_devices.PicoScope2405A.labscript_devices import PicoScope2405A
 
 
 
@@ -108,6 +107,11 @@ def ConnectionTable():
         gate_channel='/PXI1Slot5/PFI34',
     )
 
+    GH3910(
+        name='test_gh3910_aom_driver',
+        serial_number=14523, 
+    )
+
     # Spinnaker camera exposure time
     # Spinnaker ExposureTime is specified in microseconds.
     SPINNAKER_CAM1_EXPOSURE_US = 1000.0  # example: 1000 us = 1 ms
@@ -119,11 +123,21 @@ def ConnectionTable():
         'AcquisitionControl::ExposureMode': 'Timed',
         'AcquisitionControl::ExposureTime': SPINNAKER_CAM1_EXPOSURE_US,
 
+        # Fixed analog gain in dB.
+        'AnalogControl::GainAuto': 'Off',
+        'AnalogControl::Gain': 8.0,
+
         # Central ~1/9 of full 2048 x 1536 sensor
         'ImageFormatControl::Width': 680,
         'ImageFormatControl::Height': 512,
         'ImageFormatControl::OffsetX': 884,
         'ImageFormatControl::OffsetY': 512,
+
+        'AcquisitionControl::TriggerSelector': 'FrameStart',
+        'AcquisitionControl::TriggerSource': 'Line3',
+        'AcquisitionControl::TriggerActivation': 'RisingEdge',
+        # Enable triggering after the trigger selector/source are configured.
+        'AcquisitionControl::TriggerMode': 'On',
     }
 
     spinnaker_camera_attributes_cam2 = {
@@ -132,11 +146,27 @@ def ConnectionTable():
         'AcquisitionControl::ExposureMode': 'Timed',
         'AcquisitionControl::ExposureTime': SPINNAKER_CAM2_EXPOSURE_US,
 
+        # Fixed analog gain in dB.
+        'AnalogControl::GainAuto': 'Off',
+        'AnalogControl::Gain': 8.0,
+
         # Central ~1/9 of full 2048 x 1536 sensor
         'ImageFormatControl::Width': 480,
         'ImageFormatControl::Height': 412,
         'ImageFormatControl::OffsetX': 884,
         'ImageFormatControl::OffsetY': 612,
+
+        'AcquisitionControl::TriggerSelector': 'FrameStart',
+        'AcquisitionControl::TriggerSource': 'Line3',
+        'AcquisitionControl::TriggerActivation': 'RisingEdge',
+        # Enable triggering after the trigger selector/source are configured.
+        'AcquisitionControl::TriggerMode': 'On',
+    }
+
+    # BLACS manual/live-view acquisition must not wait for external TTL triggers.
+    # Buffered shots still use the TriggerMode='On' settings above.
+    spinnaker_manual_mode_camera_attributes = {
+        'AcquisitionControl::TriggerMode': 'Off',
     }
 
     SpinnakerCamera(
@@ -146,6 +176,7 @@ def ConnectionTable():
         serial_number=23397205,
         trigger_edge_type='rising',
         camera_attributes={**spinnaker_camera_attributes_cam1},
+        manual_mode_camera_attributes={**spinnaker_manual_mode_camera_attributes},
     )    
 
     SpinnakerCamera(
@@ -155,6 +186,7 @@ def ConnectionTable():
         serial_number=23397206,
         trigger_edge_type='rising',
         camera_attributes={**spinnaker_camera_attributes_cam2},
+        manual_mode_camera_attributes={**spinnaker_manual_mode_camera_attributes},
     )
     
    #Hamamatsu Orca Quest 2 attributes and device 
@@ -198,20 +230,16 @@ def ConnectionTable():
 
 
     #Picoscope 2405A trigger and device
-    # Trigger(
-    #     name="picoscope_trigger",
-    #     parent_device=pulseblaster_0.direct_outputs,
-    #     connection="flag 5",
-    # )
 
-    # PicoScope2405A(
-    #     name="picoscope_2405a",
-    #     parent_device=picoscope_trigger,
-    #     connection="trigger",
-    #     BLACS_connection="KX875/0014",
-    #     default_trigger_channel="D",
-    #     default_trigger_threshold_V=1.0,
-    # )
+
+    PicoScope2405A(
+        name="picoscope_2405a",
+        parent_device=pulseblaster_0.direct_outputs,
+        connection="flag 5",
+        BLACS_connection="KX875/0014",
+        default_trigger_channel="D",
+        default_trigger_threshold_V=1.0,
+    )
 
     #NI PXIe-6738 Card 1 AO Channels
     AnalogOut(
@@ -269,28 +297,44 @@ def ConnectionTable():
         parent_device=ni_pxie_6738_2,
         connection='ao3',
         default_value=0.0,
+
     )
-    #Analog Outputs wired to LCOM1 and 2
 
     AnalogOut(
-        name='c1_AO16',
-        parent_device=ni_pxie_6738_1,
-        connection='ao16',
+        name='c2_AO11',
+        parent_device=ni_pxie_6738_2,
+        connection='ao11',
         default_value=0.0,
     )
 
     AnalogOut(
-        name='c1_AO18',
+        name='c2_O13',
+        parent_device=ni_pxie_6738_2,
+        connection='ao13',
+        default_value=0.0,
+    )
+    #Analog Outputs wired to LCOM1 and 2
+
+    AnalogOut(
+        name='repumper_aom_analog',
+        parent_device=ni_pxie_6738_1,
+        connection='ao16',
+        default_value=0.7,
+    )
+
+    AnalogOut(
+        name='mot_aom_analog',
         parent_device=ni_pxie_6738_1,
         connection='ao18',
         default_value=0.0,
     )
 
     AnalogOut(
-        name="c1_AO20",
+        name="mot_gradient_analog",
         parent_device=ni_pxie_6738_1,
         connection='ao20',
-        default_value=0.0,
+        default_value=2.15,
+        limits=(0, 2.3),
     )
 
     AnalogOut(
@@ -321,6 +365,8 @@ def ConnectionTable():
         default_value=0.0,
     )
 
+
+
     AnalogOut(
         name="c1_AO30",
         parent_device=ni_pxie_6738_1,
@@ -328,21 +374,41 @@ def ConnectionTable():
         default_value=0.0,
     )
 
+    # MOT coil analog control (card 2, PXI1Slot4/ao10).
+    AnalogOut(
+            name="c2_AO10",
+            parent_device=ni_pxie_6738_2,
+            connection='ao10',
+            default_value=0,
+        )
+
     # MOT repumper analog control (card 2, PXI1Slot4/ao12).
     AnalogOut(
-        name="mot_repumper_analog",
+        name="c2_AO12",
         parent_device=ni_pxie_6738_2,
         connection='ao12',
-        default_value=0.0,
+        limits=(-1.0, 1.0),
+        default_value=0,
     )
 
     # MOT laser analog control (card 2, PXI1Slot4/ao14).
     AnalogOut(
-        name="mot_laser_analog",
+        name="c2_AO14",
         parent_device=ni_pxie_6738_2,
         connection='ao14',
+        limits=(0.0, 1.0),
+        default_value=0,
+    )
+
+    # Dummy channel keeps card 2's analog output count even, as required by DAQmx.
+    AnalogOut(
+        name='c2_AO_dummy',
+        parent_device=ni_pxie_6738_2,
+        connection='ao15',
         default_value=0.0,
     )
+
+
 
     AnalogOut(
         name="c2_AO16",
@@ -486,14 +552,14 @@ def ConnectionTable():
     )
 
     DigitalOut(
-        name='do18',
+        name='mot_aom_do',
         parent_device=ni_pxie_6535,
         connection="port2/line2",
         default_value=0,
     )
 
     DigitalOut(
-        name='do19',
+        name='repumper_aom_do',
         parent_device=ni_pxie_6535,
         connection="port2/line3",
         default_value=0,
@@ -514,32 +580,32 @@ def ConnectionTable():
     )
 
     DigitalOut(
-        name='do22',
+        name='mot_shutter_do',
         parent_device=ni_pxie_6535,
         connection="port2/line6",
-        default_value=0,
+        default_value=1,
     )
 
     DigitalOut(
-        name='do23',
+        name='repumper_shutter_do',
         parent_device=ni_pxie_6535,
         connection="port2/line7",
-        default_value=0,
+        default_value=1,
     )
 
-    DigitalOut(
-        name='mot_laser_do',
-        parent_device=ni_pxie_6535,
-        connection='port3/line0',  # DIO24
-        default_value=0,
-    )
+    # DigitalOut(
+    #     name='mot_laser_do',
+    #     parent_device=ni_pxie_6535,
+    #     connection='port3/line0',  # DIO24
+    #     default_value=0,
+    # )
 
-    DigitalOut(
-        name='mot_repumper_do',
-        parent_device=ni_pxie_6535,
-        connection='port3/line1',  # DIO25
-        default_value=0,
-    )
+    # DigitalOut(
+    #     name='mot_repumper_do',
+    #     parent_device=ni_pxie_6535,
+    #     connection='port3/line19',  # DIO25
+    #     default_value=0,
+    # )
 
 
     #NI PXIe-6361 Card AI Channels

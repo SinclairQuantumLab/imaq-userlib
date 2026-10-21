@@ -1,0 +1,60 @@
+from labscript import start, stop
+from labscriptlib.imaq_lab.connection_table import ConnectionTable
+
+ConnectionTable()
+
+start()
+
+t = 0.0
+
+# Keep the MOT on at the start and between shots; there is no loading wait.
+mot_repumper_analog.constant(t, mot_amp_setpoint)
+mot_laser_analog.constant(t, mot_amp_setpoint)
+mot_gradient_amp.constant(t, mot_gradient_setpoint)
+c2_AO_dummy.constant(t, 0.0)
+
+# First pair: image the existing MOT with both cameras.
+t += 10e-3
+imaq_cam1.expose(
+    t=t,
+    name='flir_camera_images',
+    frametype='mot_cam1',
+    trigger_duration=1e-3,
+)
+imaq_cam2.expose(
+    t=t,
+    name='flir_camera_images',
+    frametype='mot_cam2',
+    trigger_duration=1e-3,
+)
+
+# Allow camera readout before requesting the second pair.
+# Only the MOT laser is switched off; the repumper and gradient stay on.
+t += 50e-3
+mot_laser_analog.constant(t, 0.0)
+
+# Trigger both backgrounds 1 ms into the 5 ms dark window.
+# The connection table sets Timed exposures of approximately 1 ms.
+t += 1e-3
+imaq_cam1.expose(
+    t=t,
+    name='flir_camera_images',
+    frametype='background_cam1',
+    trigger_duration=1e-3,
+)
+imaq_cam2.expose(
+    t=t,
+    name='flir_camera_images',
+    frametype='background_cam2',
+    trigger_duration=1e-3,
+)
+
+# Restore the beam exactly 5 ms after switching it off.
+t += 4e-3
+mot_laser_analog.constant(t, mot_amp_setpoint)
+
+# Finish with all MOT settings on and allow the final frames to read out.
+# The extra AO sample also keeps buffered card 2 acquisition well formed.
+c2_AO_dummy.constant(t + 10e-3, 0.0)
+t += 50e-3
+stop(t)
